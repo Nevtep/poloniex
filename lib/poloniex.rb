@@ -12,6 +12,7 @@ module Poloniex
 
   def self.setup
     @mutex = Mutex.new
+    @nonce = Time.now.to_i * 1000
     @configuration ||= Configuration.new
     yield( configuration )
   end
@@ -22,7 +23,6 @@ module Poloniex
     def intialize
       @key    = ''
       @secret = ''
-      @nonce = Time.now.to_i
     end
   end
 
@@ -84,8 +84,8 @@ module Poloniex
   def self.post( command, params = {} )
     params[:command] = command
     @mutex.synchronize do
-      params[:nonce] = configuration.nonce
-      configuration.nonce += 1
+      params[:nonce] = @nonce
+      @nonce += 1
     end
     resource[ 'tradingApi' ].post params, { Key: configuration.key , Sign: create_sign( params ) }
   end
